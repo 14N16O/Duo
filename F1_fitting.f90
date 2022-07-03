@@ -10,10 +10,6 @@ module F1_fitting
         bobrot, diabatic, lambdaopq, lambdap2q, lambdaq, &
         l_omega_obj, s_omega_obj, quadrupoletm, hfcc1, &
         Nobjects, abinitio, eigen, basis
-    ! use refinement, only: fit_indexT, object_containerT
-    
-    ! use nlopt_wrap, only : nlopt_opt, nlopt_func, create, destroy
-    ! use nlopt_enum, only : NLOPT_SUCCESS, algorithm_from_string
 
     implicit none
 
@@ -106,54 +102,17 @@ contains
         call nlo_optimize(ires, opt, x, minf)
 
         if (ires < 0) then
-            write(out, '(/A2, A)') '', trim(nlopt_flag(ires))
+            write(out, '(/A2, A)') '', trim(nlopt_stop_flag(ires))
         else
             write(out, '(/A)') 'NLOPT found minimum at'
             do i = 1, num_parameters
                 write(out, '(A2, A, I3, A, F24.14)') '', 'x(', i, ') = ', x(i) 
             enddo
             write(out, '(A, F24.14)') 'The minimum is ', minf
-            write(out, '(A, A)') 'The NLOPT flag is ', trim(nlopt_flag(ires))
+            write(out, '(A, A)') 'The NLOPT flag is ', trim(nlopt_stop_flag(ires))
         endif
         
         call nlo_destroy(opt)
-
-    contains
-        function nlopt_flag(ires) result(flag)
-            implicit none
-            integer(ik) :: ires
-            character(cl):: flag
-
-            select case(ires)
-                case (NLOPT_SUCCESS)
-                    flag = "NLOPT_SUCCESS"
-                case (NLOPT_STOPVAL_REACHED)
-                    flag = "NLOPT_STOPVAL_REACHED"
-                case (NLOPT_FTOL_REACHED)
-                    flag = "NLOPT_FTOL_REACHED"
-                case (NLOPT_XTOL_REACHED)
-                    flag = "NLOPT_XTOL_REACHED"
-                case (NLOPT_MAXEVAL_REACHED)
-                    flag = "NLOPT_MAXEVAL_REACHED"
-                case (NLOPT_MAXTIME_REACHED)
-                    flag = "NLOPT_MAXTIME_REACHED ="
-                case (NLOPT_FAILURE)
-                    flag = "NLOPT_FAILURE"
-                case (NLOPT_INVALID_ARGS)
-                    flag = "NLOPT_INVALID_ARGS"
-                case (NLOPT_OUT_OF_MEMORY )
-                    flag = "NLOPT_OUT_OF_MEMORY "
-                case (NLOPT_ROUNDOFF_LIMITED)
-                    flag = "NLOPT_ROUNDOFF_LIMITED"
-                case (NLOPT_FORCED_STOP)
-                    flag = "NLOPT_FORCED_STOP"
-
-                case default
-                    flag = "Unknown NLOPT flag"
-            endselect
-            
-        end function nlopt_flag
-    
     end subroutine F1_refine
 
     function get_initial_guess() result(x)
@@ -252,7 +211,8 @@ contains
                     !
                     !f = analytical_field(req,objects(iobject,ifield)%field%type,objects(iobject,ifield)%field%value)
                     !
-                    abinitio(ifield_)%gridvalue(1) = objects(iobject,ifield)%field%gridvalue(ipotmin)
+                    abinitio(ifield_)%gridvalue(1) = &
+                        objects(iobject,ifield)%field%gridvalue(ipotmin)
                     
                 endif 
             enddo
@@ -273,7 +233,7 @@ contains
                     if (nint(objects(iobject,ifield)%field%weight(iterm)) > 0 .and. & 
                         trim(objects(iobject,ifield)%field%type)/='GRID') then 
                         
-                        num_parameters=num_parameters+1
+                        num_parameters = num_parameters + 1
                         
                         fit_index(num_parameters)%i = j
                         fit_index(num_parameters)%iobject = iobject
@@ -285,22 +245,6 @@ contains
             enddo
         enddo
 
-    contains
-        function get_nlopt_algorithm(fit_optimization_algorithm) &
-            result(algorithm)
-
-            character(cl), intent(in) :: fit_optimization_algorithm
-            integer :: algorithm
-
-            select case(trim(fit_optimization_algorithm))
-            case ("NLOPT_LN_BOBYQA")
-                algorithm = NLOPT_LN_BOBYQA
-            case default
-                algorithm = NLOPT_LN_COBYLA
-            end select
-
-        end function get_nlopt_algorithm
-    
     end subroutine F1_refinement_init
 
     subroutine read_F1_hyperfine_states_fit
