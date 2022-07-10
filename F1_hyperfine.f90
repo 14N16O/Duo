@@ -1064,6 +1064,7 @@ contains
 
     contains 
         REAL(rk) function log_()   
+        real(rk) log_gamma
         log_ = log_gamma(t + 2.0_rk) &
             - log_gamma(t - j1 - j2 - j3 + 1.0_rk) &
             - log_gamma(t - j1 - J_2 - J_3 + 1.0_rk) & 
