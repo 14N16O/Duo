@@ -596,6 +596,10 @@ contains
                   !
                   call intens_filter(jI,jF,energyI,energyF,isymI,isymF,igamma_pair,passed)
                   !
+                  ! skip if the upper state is unbound states if the filter is on
+                  !
+                  if (intensity%unbound.and.eigen(indF,igammaF)%quanta(ilevelF)%bound) passed = .false.
+                  !
                   if ( intensity%matelem ) call matelem_filter (jI,jF,energyI,energyF,isymI,isymF,igamma_pair,passed)
                   !
                   if (passed) then 
@@ -667,10 +671,6 @@ contains
            !
            call energy_filter_lower(jI,energyI,passed_)
            !
-           ! skip upper ubound states if the filter is on
-           !
-           if (intensity%bound.and..not.eigen(indI,igammaI)%quanta(ilevelI)%bound) passed = .false.
-           !
            if (.not.passed.and..not.passed_) cycle
            !
            if (trim(intensity%linelist_file)/="NONE") then
@@ -678,7 +678,7 @@ contains
              !dimension of the bases for the initial states
              !
              !energy, quanta, and gedeneracy order of the initial state
-             
+             !
              quantaI => eigen(indI,igammaI)%quanta(ilevelI)
              ivibI    = quantaI%ivib
              ivI      = quantaI%v
